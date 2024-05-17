@@ -9,13 +9,13 @@ from .face_detectors import *
 from .face_processors import *
 
 # from ..converters.insight2onnx import convert_insight_model
-from ..converters.reshape_onnx import reshape, reshape_onnx_input
-from ..converters.remove_initializer_from_input import remove_initializer_from_input
-from ..utils.helpers import prepare_folders
-from ..utils.download import download
-from ..utils.download_google import download_from_gdrive, check_hash
+from converters.reshape_onnx import reshape, reshape_onnx_input
+from converters.remove_initializer_from_input import remove_initializer_from_input
+from utils.helpers import prepare_folders
+from utils.download import download
+from utils.download_google import download_from_gdrive, check_hash
 
-from ..configs import Configs
+from configs import Configs
 
 from .exec_backends import onnxrt_backend as onnx_backend
 
