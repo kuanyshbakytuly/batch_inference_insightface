@@ -6,12 +6,12 @@ import logging
 from typing import Union
 from numba import njit
 
-from common.nms import nms
-from exec_backends.onnxrt_backend import DetectorInfer as DIO
+from model_zoo.detectors.common.nms import nms
+from model_zoo.exec_backends.onnxrt_backend import DetectorInfer as DIO
 
 # Since TensorRT and pycuda are optional dependencies it might be not available
 try:
-    from ..exec_backends.trt_backend import DetectorInfer as DIT
+    from model_zoo.exec_backends.trt_backend import DetectorInfer as DIT
 except:
     DIT = None
 
