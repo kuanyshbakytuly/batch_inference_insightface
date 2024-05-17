@@ -1,8 +1,8 @@
-from .detectors.retinaface import RetinaFace
-from .detectors.centerface import CenterFace
-from .detectors.dbface import DBFace
-from .detectors.scrfd import SCRFD
-from .detectors.yolov5_face import YoloV5
+from detectors.retinaface import RetinaFace
+from detectors.centerface import CenterFace
+from detectors.dbface import DBFace
+from detectors.scrfd import SCRFD
+from detectors.yolov5_face import YoloV5
 
 
 def get_retinaface(model_path, backend, outputs, rac, masks=False, **kwargs):
