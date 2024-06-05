@@ -7,13 +7,13 @@ import cv2
 import numpy as np
 from numba import njit
 
-from model_zoo.detectors.common.nms import nms
-from model_zoo.exec_backends.onnxrt_backend import DetectorInfer as DIO
+from src.cv.face_recognition.batch_inference_insightface.model_zoo.detectors.common.nms import nms
+from src.cv.face_recognition.batch_inference_insightface.model_zoo.exec_backends.onnxrt_backend import DetectorInfer as DIO
 
 # Since TensorRT and pycuda are optional dependencies it might be not available
 try:
     import cupy as cp
-    from model_zoo.exec_backends.trt_backend import DetectorInfer as DIT
+    from src.cv.face_recognition.batch_inference_insightface.model_zoo.exec_backends.trt_backend import DetectorInfer as DIT
 except BaseException:
     DIT = None
 
