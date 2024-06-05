@@ -5,25 +5,25 @@ from typing import List
 import traceback
 import onnx
 
-from model_zoo.face_detectors import *
-from model_zoo.face_processors import *
+from batch_inference_insightface.model_zoo.face_detectors import *
+from batch_inference_insightface.model_zoo.face_processors import *
 
 # from ..converters.insight2onnx import convert_insight_model
-from converters.reshape_onnx import reshape, reshape_onnx_input
-from converters.remove_initializer_from_input import remove_initializer_from_input
-from utils.helpers import prepare_folders
-from utils.download import download
-from utils.download_google import download_from_gdrive, check_hash
+from batch_inference_insightface.converters.reshape_onnx import reshape, reshape_onnx_input
+from batch_inference_insightface.converters.remove_initializer_from_input import remove_initializer_from_input
+from batch_inference_insightface.utils.helpers import prepare_folders
+from batch_inference_insightface.utils.download import download
+from batch_inference_insightface.utils.download_google import download_from_gdrive, check_hash
 
-from configs import Configs
+from batch_inference_insightface.configs import Configs
 
-from model_zoo.exec_backends import onnxrt_backend as onnx_backend
+from batch_inference_insightface.model_zoo.exec_backends import onnxrt_backend as onnx_backend
 
 # Since TensorRT, TritonClient and PyCUDA are optional dependencies it might be not available
 
-from model_zoo.exec_backends import trt_backend
+from batch_inference_insightface.model_zoo.exec_backends import trt_backend
 #from .exec_backends import triton_backend as triton_backend
-from converters.onnx_to_trt import convert_onnx, check_fp16
+from batch_inference_insightface.converters.onnx_to_trt import convert_onnx, check_fp16
 
 
 # Map function names to corresponding functions

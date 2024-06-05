@@ -4,7 +4,7 @@ import numpy as np
 import logging
 import cupy as cp
 import time
-from model_zoo.exec_backends.trt_loader import TrtModel
+from batch_inference_insightface.model_zoo.exec_backends.trt_loader import TrtModel
 
 
 def _normalize_on_device(input, stream, out, mean=0., std=1., swapRB=True):
