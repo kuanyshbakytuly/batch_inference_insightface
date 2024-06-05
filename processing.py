@@ -9,7 +9,7 @@ from typing import Dict, List, Union
 import aiohttp
 import cv2
 import numpy as np
-from src.cv.face_recognition.batch_inference_insightface.utils.image_provider import get_images
+from cv.src.cv.face_recognition.batch_inference_insightface.utils.image_provider import get_images
 
 f_model = os.getenv("FACE_MODEL_CLASS", "face_model")
 sys.path.append(os.path.dirname(os.path.realpath(__file__)))
