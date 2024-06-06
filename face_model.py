@@ -7,10 +7,11 @@ from typing import List
 import cv2
 import numpy as np
 import base64
-from src.cv.face_recognition.batch_inference_insightface.dataimage import resize_image
-from src.cv.face_recognition.batch_inference_insightface.model_zoo.getter import get_model
-from src.cv.face_recognition.batch_inference_insightface.utils import fast_face_align as face_align
-from src.cv.face_recognition.batch_inference_insightface.utils.helpers import to_chunks, validate_max_size
+
+from .imagedata import resize_image
+from .model_zoo.getter import get_model
+from .utils import fast_face_align as face_align
+from .utils.helpers import to_chunks, validate_max_size
 from numpy.linalg import norm
 
 Face = collections.namedtuple("Face", ['bbox', 'landmark', 'det_score', 'embedding', 'gender', 'age', 'embedding_norm',

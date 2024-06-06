@@ -1,8 +1,8 @@
-from src.cv.face_recognition.batch_inference_insightface.model_zoo.detectors.retinaface import RetinaFace
-from src.cv.face_recognition.batch_inference_insightface.model_zoo.detectors.centerface import CenterFace
-from src.cv.face_recognition.batch_inference_insightface.model_zoo.detectors.dbface import DBFace
-from src.cv.face_recognition.batch_inference_insightface.model_zoo.detectors.scrfd import SCRFD
-from src.cv.face_recognition.batch_inference_insightface.model_zoo.detectors.yolov5_face import YoloV5
+from .detectors.retinaface import RetinaFace
+from .detectors.centerface import CenterFace
+from .detectors.dbface import DBFace
+from .detectors.scrfd import SCRFD
+from .detectors.yolov5_face import YoloV5
 
 
 def get_retinaface(model_path, backend, outputs, rac, masks=False, **kwargs):
