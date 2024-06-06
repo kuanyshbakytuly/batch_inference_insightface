@@ -8,7 +8,7 @@ import cv2
 import numpy as np
 import base64
 
-from .imagedata import resize_image
+from .dataimage import resize_image
 from .model_zoo.getter import get_model
 from .utils import fast_face_align as face_align
 from .utils.helpers import to_chunks, validate_max_size
