@@ -168,10 +168,8 @@ class FaceAnalysis:
             total = len(crops)
             embeddings = [None] * total
             ga = [[None, None]] * total
-
             if extract_embedding:
                 embeddings = self.rec_model.get_embedding(crops)
-
             if extract_ga and self.ga_model:
                 ga = self.ga_model.get(crops)
 

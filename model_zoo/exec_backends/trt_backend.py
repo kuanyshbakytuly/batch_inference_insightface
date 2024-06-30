@@ -15,6 +15,9 @@ class Arcface:
     # warmup
     def prepare(self, **kwargs):
         self.rec_model.build()
+        self.out_shapes = self.rec_model.out_shapes
+        self.inputs_shape = self.rec_model.inputs_shape
+        self.batch_size = self.rec_model.inputs_shape[0][0]
 
     def get_embedding(self, face_img):
         if not isinstance(face_img, list):
@@ -26,7 +29,7 @@ class Arcface:
         embeddings = self.rec_model.run(input=face_img, deflatten=True, as_dict=True)
         self.output_order = ['683']
         embeddings = [embeddings[e] for e in self.output_order]
-        return embeddings
+        return embeddings[0]
 
 
 
@@ -39,7 +42,12 @@ class DetectorInfer:
 
     # warmup
     def prepare(self, **kwargs):
+        print('Preparing DetectorInfer')
         self.rec_model.build()
+        self.out_shapes = self.rec_model.out_shapes
+        self.inputs_shape = self.rec_model.inputs_shape
+        self.batch_size = self.rec_model.inputs_shape[0][0]
+
 
 
     def run(self, input=None, from_device=False, infer_shape=None, **kwargs):

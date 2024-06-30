@@ -5,7 +5,7 @@
 
 from __future__ import division
 import time
-f#rom typing import Union
+#from typing import Union
 from functools import wraps
 import cv2
 import numpy as np
@@ -207,13 +207,11 @@ class SCRFD:
         input_width = imgs[0].shape[1]
         blob = self._preprocess(imgs)
         net_outs = self._forward(blob)
-
         dets_list = []
         kpss_list = []
 
         bboxes_by_img, kpss_by_img, scores_by_img = self._postprocess(net_outs, input_height, input_width, threshold)
-
-        for e in range(self.batch_size):
+        for e in range(len(net_outs[0])):
             det, kpss = filter(
                 bboxes_by_img[e], kpss_by_img[e], scores_by_img[e], self.nms_threshold)
 
@@ -338,10 +336,10 @@ class SCRFD:
         bboxes_by_img = []
         kpss_by_img = []
         scores_by_img = []
-
-        for n_img in range(batch_size):
+        for n_img in range(len(net_outs[0])):
             offset = 0
             for idx, stride in enumerate(self._feat_stride_fpn):
+
                 score_blob = net_outs[idx][n_img]
                 bbox_blob = net_outs[idx + self.fmc][n_img]
                 kpss_blob = net_outs[idx + self.fmc * 2][n_img]
