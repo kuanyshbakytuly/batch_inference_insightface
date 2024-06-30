@@ -1,7 +1,7 @@
 import os
 from itertools import chain, islice
 from distutils import util
-import logging
+import hashlib
 
 def prepare_folders(paths):
     for path in paths:
@@ -50,5 +50,38 @@ def validate_max_size(max_size):
     if max_size[0] % 32 != 0 or max_size[1] % 32 != 0:
         max_size[0] = max_size[0] // 32 * 32
         max_size[1] = max_size[1] // 32 * 32
-        logging.warning(f'Input image dimensions should be multiples of 32. Max size changed to: {max_size}')
     return max_size
+
+def check_hash(filename, hash, algo='md5'):
+    """Check whether hash of the file content matches the expected hash.
+    Parameters
+    ----------
+    filename : str
+        Path to the file.
+    hash : str
+        Expected hash in hexadecimal digits.
+    algo: str
+        Hashing algorithm (md5, sha1, sha256, sha512)
+
+    Returns
+    -------
+    bool
+        Whether the file content matches the expected hash.
+    """
+    algos = {
+        'md5': hashlib.md5,
+        'sha1': hashlib.sha1,
+        'sha256': hashlib.sha256,
+        'sha512': hashlib.sha512,
+    }
+    hasher = algos[algo]()
+    with open(filename, 'rb') as f:
+        while True:
+            data = f.read(1048576)
+            if not data:
+                break
+            hasher.update(data)
+
+    file_hash = hasher.hexdigest()
+    l = min(len(file_hash), len(hash))
+    return hasher.hexdigest()[0:l] == hash[0:l]

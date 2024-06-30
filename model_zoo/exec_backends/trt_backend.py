@@ -1,7 +1,5 @@
 import os
 import numpy as np
-import logging
-import time
 from ..exec_backends.trt_loader import TrtModel
 
 class Arcface:
@@ -16,7 +14,6 @@ class Arcface:
 
     # warmup
     def prepare(self, **kwargs):
-        logging.info(f"Warming up Face Recognition ArcFace engine...")
         self.rec_model.build()
 
     def get_embedding(self, face_img):
@@ -42,7 +39,6 @@ class DetectorInfer:
 
     # warmup
     def prepare(self, **kwargs):
-        logging.info(f"Warming up Face Detector SCRDF engine...")
         self.rec_model.build()
 
 

@@ -5,10 +5,8 @@
 
 from __future__ import division
 import time
-from typing import Union
+f#rom typing import Union
 from functools import wraps
-import logging
-
 import cv2
 import numpy as np
 from numba import njit
@@ -16,7 +14,7 @@ from numba import njit
 from .common.nms import nms
 
 # Since TensorRT and pycuda are optional dependencies it might be not available
-import cupy as cp
+#import cupy as cp
 from ..exec_backends.trt_backend import DetectorInfer as DIT
 
 
@@ -29,7 +27,6 @@ def timing(f):
         t0 = time.time()
         result = f(*args, **kw)
         took_ms = (time.time() - t0) * 1000
-        logging.debug(f'func: "{f.__name__}" took: {took_ms:.4f} ms')
         return result
 
     return wrap
@@ -302,7 +299,6 @@ class SCRFD:
         else:
             net_outs = self.session.run(blob)
         t1 = time.time()
-        logging.debug(f'Inference cost: {(t1 - t0) * 1000:.3f} ms.')
         return net_outs
 
     # @timing

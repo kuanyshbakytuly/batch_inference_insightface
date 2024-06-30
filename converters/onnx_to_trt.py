@@ -1,8 +1,6 @@
-import os
 import tensorrt as trt
 import sys
-from typing import Tuple, Union
-import logging
+from typing import Union
 
 # Based on code from NVES_R's response at
 # https://forums.developer.nvidia.com/t/segmentation-fault-when-creating-the-trt-builder-in-python-works-fine-with-trtexec/111376
@@ -30,12 +28,7 @@ def _build_engine_onnx(input_onnx: Union[str, bytes], force_fp16: bool = False, 
             trt.OnnxParser(network, TRT_LOGGER) as parser:
         has_fp16 = builder.platform_has_fast_fp16
         if force_fp16 or has_fp16:
-            logging.info('Building TensorRT engine with FP16 support.')
-            if not has_fp16:
-                logging.warning('Builder reports no fast FP16 support. Performance drop expected.')
             config.set_flag(trt.BuilderFlag.FP16)
-        else:
-            logging.warning('Building engine in FP32 mode.')
 
         max_workspace_size = 1 << 30
 
@@ -47,8 +40,6 @@ def _build_engine_onnx(input_onnx: Union[str, bytes], force_fp16: bool = False, 
                 print(parser.get_error(error))
             sys.exit(1)
 
-        if max_batch_size != 1:
-            logging.warning('Batch size !=1 is used. Ensure your inference code supports it.')
         profile = builder.create_optimization_profile()
         # Get input name and shape for building optimization profile
         inputs = [network.get_input(i) for i in range(network.num_inputs)]
@@ -77,7 +68,7 @@ def _build_engine_onnx(input_onnx: Union[str, bytes], force_fp16: bool = False, 
 
         engine = builder.build_serialized_network(network, config=config)
         if engine is None:
-            logging.error("Failed to build the TensorRT engine.")
+            print('Engine is None')
             return None
         return engine
 

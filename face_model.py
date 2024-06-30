@@ -1,6 +1,4 @@
 import collections
-import logging
-import time
 from functools import partial
 from typing import List
 
@@ -100,7 +98,6 @@ class FaceAnalysis:
         self.det_name = det_name
         self.rec_name = rec_name
         if backend_name not in ('trt', 'triton') and max_rec_batch_size != 1:
-            logging.warning('Batch processing supported only for TensorRT & Triton backend. Fallback to 1.')
             self.max_rec_batch_size = 1
 
         assert det_name is not None

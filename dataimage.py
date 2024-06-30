@@ -1,9 +1,4 @@
-from typing import List
 import cv2
-import numpy as np
-import logging
-
-
 
 def resize_image(image, max_size: list = None):
 
