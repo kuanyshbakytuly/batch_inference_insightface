@@ -92,7 +92,7 @@ def prepare_backend(model_name, backend_name, im_size: List[int] = None,
         shape = (1, 3) + tuple(im_size)[::-1]
 
     onnx_dir, onnx_path = config.build_model_paths(model_name, 'onnx')
-    trt_dir, trt_path = config.build_model_paths(model_name, 'plan')
+    trt_dir, trt_path = config.build_model_paths(model_name, 'engine')
 
     onnx_exists = os.path.exists(onnx_path)
     onnx_hash = config.models[model_name].get('md5')
@@ -134,11 +134,11 @@ def prepare_backend(model_name, backend_name, im_size: List[int] = None,
         has_fp16 = check_fp16()
 
         if reshape_allowed is True:
-            trt_path = trt_path.replace('.plan', f'_{shape[3]}_{shape[2]}.plan')
+            trt_path = trt_path.replace('.engine', f'_{shape[3]}_{shape[2]}.engine')
         if max_batch_size > 1:
-            trt_path = trt_path.replace('.plan', f'_batch{max_batch_size}.plan')
+            trt_path = trt_path.replace('.engine', f'_batch{max_batch_size}.engine')
         if force_fp16 or has_fp16:
-            trt_path = trt_path.replace('.plan', '_fp16.plan')
+            trt_path = trt_path.replace('.engine', '_fp16.engine')
 
         prepare_folders([trt_dir])
 
@@ -194,7 +194,6 @@ def get_model(model_name: str, backend_name: str, im_size: List[int] = None, max
         'mxnet': 'mxnet',
         #'triton': triton_backend
     }
-    print(trt_backend)
 
     if backend_name not in backends:
         logging.error(f"Unknown backend '{backend_name}' specified. Exiting.")
@@ -215,7 +214,7 @@ def get_model(model_name: str, backend_name: str, im_size: List[int] = None, max
     outputs = config.get_outputs_order(model_name)
     if not outputs and backend_name == 'trt':
         logging.debug(f'No output order provided, for "{model_name}" trying to read it from "output_order.json"')
-        trt_dir, trt_path = config.build_model_paths(model_name, 'plan')
+        trt_dir, trt_path = config.build_model_paths(model_name, 'engine')
         outputs = read_outputs_order(trt_dir)
 
     func = func_map[config.models[model_name].get('function')]

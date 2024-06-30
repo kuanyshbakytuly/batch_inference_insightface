@@ -171,11 +171,11 @@ class SCRFD:
         self.nms_threshold = nms_treshold
         self.session.prepare()
         self.out_shapes = self.session.out_shapes
-        self.input_shape = self.session.input_shape
-        self.infer_shape = self.input_shape
+        self.inputs_shape = self.session.inputs_shape[0]
+        self.batch_size = self.session.batch_size
 
         # Preallocate reusable arrays for proposals
-        max_prop_len = self._get_max_prop_len(self.input_shape,
+        max_prop_len = self._get_max_prop_len(self.inputs_shape,
                                               self._feat_stride_fpn,
                                               self._num_anchors)
         self.score_list = np.zeros((max_prop_len, 1), dtype='float32')
@@ -183,11 +183,11 @@ class SCRFD:
         self.kpss_list = np.zeros((max_prop_len, 10), dtype='float32')
 
         # Check if exec backend provides CUDA stream
-        try:
-            self.stream = self.session.stream
-            self.input_ptr = self.session.input_ptr
-        except BaseException:
-            pass
+        # try:
+        #     self.stream = self.session.stream
+        #     self.input_ptr = self.session.input_ptr
+        # except BaseException:
+        #     pass
 
     # @timing
     def detect(self, imgs, threshold=0.5):
@@ -217,7 +217,7 @@ class SCRFD:
 
         bboxes_by_img, kpss_by_img, scores_by_img = self._postprocess(net_outs, input_height, input_width, threshold)
 
-        for e in range(self.infer_shape[0]):
+        for e in range(self.batch_size):
             det, kpss = filter(
                 bboxes_by_img[e], kpss_by_img[e], scores_by_img[e], self.nms_threshold)
 
@@ -280,7 +280,7 @@ class SCRFD:
 
         blob = None
         if self.stream:
-            self.infer_shape = _normalize_on_device(
+            self.batch_size = _normalize_on_device(
                 img, self.stream, self.input_ptr)
         else:
             input_size = tuple(img[0].shape[0:2][::-1])
@@ -299,7 +299,7 @@ class SCRFD:
         t0 = time.time()
         if self.stream:
             net_outs = self.session.run(
-                from_device=True, infer_shape=self.infer_shape)
+                from_device=True, infer_shape=self.batch_size)
         else:
             net_outs = self.session.run(blob)
         t1 = time.time()
@@ -339,7 +339,7 @@ class SCRFD:
 
 
 
-        batch_size = self.infer_shape[0]
+        batch_size = self.batch_size
         bboxes_by_img = []
         kpss_by_img = []
         scores_by_img = []

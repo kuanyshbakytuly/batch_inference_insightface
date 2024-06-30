@@ -382,7 +382,6 @@ class Configs(object):
         self.type2path = dict(
             onnx=self.onnx_models_dir,
             engine=self.trt_engines_dir,
-            plan=self.trt_engines_dir
         )
 
     def __get_param(self, ENV, default=None):

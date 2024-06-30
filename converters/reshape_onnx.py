@@ -26,7 +26,7 @@ def reshape(model, n: int = 1, h: int = 480, w: int = 640, mode='auto'):
 
         input_name = model.graph.input[0].name
         out_shape = model.graph.output[0].type.tensor_type.shape.dim[1].dim_value
-        
+
         dyn_size = False
         if model.graph.input[0].type.tensor_type.shape.dim[2].dim_param == '?':
             dyn_size = True
@@ -45,7 +45,7 @@ def reshape(model, n: int = 1, h: int = 480, w: int = 640, mode='auto'):
 
     d = model.graph.input[0].type.tensor_type.shape.dim
     d[0].dim_value = n
-    logging.debug(f"In shape: {d}")
+    print(f"In shape: {d}")
     if mode != 'arcface':
         d[2].dim_value = h
         d[3].dim_value = w
@@ -67,8 +67,9 @@ def reshape(model, n: int = 1, h: int = 480, w: int = 640, mode='auto'):
             if mode not in  ('arcface', 'mask_detector'):
                 d[2].dim_value = math.ceil(h / divisor)
                 d[3].dim_value = math.ceil(w / divisor)
+    print(mode)
     logging.debug(f"Out shape: {d}")
-    print(f"Reshaped to {n}")
+    print(f"Reshaped to {d}")
     return model
 
 
@@ -91,6 +92,4 @@ def reshape_onnx_input(onnx_path: str, out_path: str, im_size: List[int] = None,
     model = onnx.load(onnx_path)
     reshaped = reshape(model, n=batch_size, h=im_size[1], w=im_size[0], mode=mode)
 
-    with open(out_path, "wb") as file_handle:
-        serialized = reshaped.SerializeToString()
-        file_handle.write(serialized)
+    return reshaped.SerializeToString()
