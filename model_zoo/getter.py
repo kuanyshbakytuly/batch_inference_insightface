@@ -12,12 +12,8 @@ from .face_processors import *
 from ..converters.reshape_onnx import reshape, reshape_onnx_input
 from ..converters.remove_initializer_from_input import remove_initializer_from_input
 from ..utils.helpers import prepare_folders
-from ..utils.download import download
-from ..utils.download_google import download_from_gdrive, check_hash
 
 from ..configs import Configs
-
-from .exec_backends import onnxrt_backend as onnx_backend
 
 # Since TensorRT, TritonClient and PyCUDA are optional dependencies it might be not available
 
@@ -28,20 +24,10 @@ from ..converters.onnx_to_trt import convert_onnx, check_fp16
 
 # Map function names to corresponding functions
 func_map = {
-    'genderage_v1': genderage_v1,
-    'retinaface_r50_v1': retinaface_r50_v1,
-    'retinaface_mnet025_v1': retinaface_mnet025_v1,
-    'retinaface_mnet025_v2': retinaface_mnet025_v2,
-    'mnet_cov2': mnet_cov2,
-    'centerface': centerface,
-    'dbface': dbface,
     'scrfd': scrfd,
     'scrfd_v2': scrfd_v2,
     'arcface_mxnet': arcface_mxnet,
     'arcface_torch': arcface_torch,
-    'adaface': adaface,
-    'mask_detector': mask_detector,
-    'yolov5_face': yolov5_face
 }
 
 
@@ -189,7 +175,7 @@ def get_model(model_name: str, backend_name: str, im_size: List[int] = None, max
     config = Configs(models_dir=root_dir)
 
     backends = {
-        'onnx': onnx_backend,
+        #'onnx': onnx_backend,
         'trt': trt_backend,
         'mxnet': 'mxnet',
         #'triton': triton_backend

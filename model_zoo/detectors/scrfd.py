@@ -14,7 +14,6 @@ import numpy as np
 from numba import njit
 
 from .common.nms import nms
-from ..exec_backends.onnxrt_backend import DetectorInfer as DIO
 
 # Since TensorRT and pycuda are optional dependencies it might be not available
 import cupy as cp
@@ -147,7 +146,7 @@ def _normalize_on_device(input, stream, out):
 
 class SCRFD:
 
-    def __init__(self, inference_backend: Union[DIT, DIO], ver=1):
+    def __init__(self, inference_backend, ver=1):
         self.session = inference_backend
         self.center_cache = {}
         self.nms_threshold = 0.4
