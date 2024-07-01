@@ -47,7 +47,7 @@ class HostDeviceMem:
                 raise ValueError(
                     f"Tried to fit an array of size {data.size} into host memory of size {self.host.size}"
                 )
-            np.copyto(self.host[:data.size], data.flat, casting='safe')
+            np.copyto(self.host[:data.size], data.astype(np.float32).flat, casting='safe')
         else:
             assert self.host.dtype == np.uint8
             self.host[:self.nbytes] = np.frombuffer(data, dtype=np.uint8)
