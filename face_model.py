@@ -89,7 +89,7 @@ class FaceAnalysis:
                  force_fp16: bool = False,
                  triton_uri=None,
                  root_dir: str = '/models',
-                 path2database: str = '',
+                 database_path: str = '',
                  **kwargs):
 
         if max_size is None:
@@ -101,7 +101,7 @@ class FaceAnalysis:
         self.max_det_batch_size = max_batch_size
         self.det_name = det_name
         self.rec_name = rec_name
-        self.database_path = path2database
+        self.database_path = database_path
 
         if backend_name not in ('trt', 'triton') and max_rec_batch_size != 1:
             logging.warning('Batch processing supported only for TensorRT & Triton backend. Fallback to 1.')
