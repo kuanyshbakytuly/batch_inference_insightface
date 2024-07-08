@@ -319,17 +319,15 @@ class FaceAnalysis:
         return status
     
     def get_db_embeddings(self):
-        database_path = self.path2database
-        if os.path.exists(database_path):
-            with open(database_path, 'rb') as db_file:
+        if os.path.exists(self.database_path):
+            with open(self.database_path, 'rb') as db_file:
                 face_database = pickle.load(db_file)
         else:
             face_database = {}
+            return [], []
 
-        new_database = face_database
-
-        embeddings_array = np.array([face['embedding'] for face in new_database])
-        identities_array = np.array([face['identity'] for face in new_database])
+        embeddings_array = np.array([face['embedding'] for face in face_database])
+        identities_array = np.array([face['identity'] for face in face_database])
 
         return embeddings_array, identities_array
 
