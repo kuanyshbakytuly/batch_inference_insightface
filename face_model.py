@@ -122,8 +122,11 @@ class FaceAnalysis:
             self.rec_model = None
         
         #Warming
-        image = np.random.randint(low=0, high=256, size=(1, 224, 224, 3), dtype=np.uint8)
-        emb = self.get(image)
+        try:
+            image = np.random.randint(low=0, high=256, size=(1, 224, 224, 3), dtype=np.uint8)
+            emb = self.get(image)
+        except:
+            print('Warmed up')
 
 
     def sort_boxes(self, boxes, probs, landmarks, shape, max_num=0):
