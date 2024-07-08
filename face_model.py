@@ -294,13 +294,13 @@ class FaceAnalysis:
 
         return True
     
-    def register_person(self, data):
+    def register_person(self, data, step=20):
         face_embeddings = []
         video_path = data['video']
         person_info = data['person_info']
         cap = cv2.VideoCapture(video_path)
         frame_count = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
-        for frame_num in range(0, frame_count, 20):
+        for frame_num in range(0, frame_count, step):
             cap.set(cv2.CAP_PROP_POS_FRAMES, frame_num)
             ret, frame = cap.read()
             if ret:
