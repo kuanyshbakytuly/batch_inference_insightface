@@ -17,6 +17,10 @@ from .utils.cosine import cosine_sim
 from .utils.helpers import to_chunks, validate_max_size
 from numpy.linalg import norm
 
+import warnings
+from numba.core.errors import NumbaPendingDeprecationWarning
+warnings.simplefilter('ignore', category=NumbaPendingDeprecationWarning)
+
 Face = collections.namedtuple("Face", ['bbox', 'landmark', 'det_score', 'embedding', 'gender', 'age', 'embedding_norm',
                                        'normed_embedding', 'facedata', 'scale', 'num_det', 'mask', 'mask_probs'])
 
