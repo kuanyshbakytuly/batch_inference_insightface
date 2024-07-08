@@ -85,8 +85,6 @@ class DetectorInfer:
         self.input_shape = None
         self.output_order = output_order
 
-        print(model, output_order)
-
     # warmup
     def prepare(self, **kwargs):
         logging.info(f"Warming up face detector TensorRT engine...")

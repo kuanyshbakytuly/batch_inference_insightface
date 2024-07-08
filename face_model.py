@@ -79,9 +79,10 @@ def reproject_points(dets, scale: float):
 
 class FaceAnalysis:
     def __init__(self,
-                 det_name: str = 'retinaface_r50_v1',
-                 rec_name: str = 'arcface_r100_v1',
-                 max_size=None,
+                 det_name: str = 'scrfd_2.5g_gnkps',
+                 rec_name: str = 'w600k_r50',
+                 max_size=[640, 640],
+                 max_batch_size: int = 1,
                  max_rec_batch_size: int = 1,
                  max_det_batch_size: int = 1,
                  backend_name: str = 'trt',
@@ -96,8 +97,8 @@ class FaceAnalysis:
 
         self.decode_required = True
         self.max_size = validate_max_size(max_size)
-        self.max_rec_batch_size = max_rec_batch_size
-        self.max_det_batch_size = max_det_batch_size
+        self.max_rec_batch_size = max_batch_size
+        self.max_det_batch_size = max_batch_size
         self.det_name = det_name
         self.rec_name = rec_name
         self.database_path = path2database
@@ -307,7 +308,7 @@ class FaceAnalysis:
                 emb['embedding'] = embedding[0]['vec']
                 emb['identity'] = person_info
                 face_embeddings.append(emb)
-                
+
         cap.release()
         status = self.update_db(face_embeddings=face_embeddings)
 
