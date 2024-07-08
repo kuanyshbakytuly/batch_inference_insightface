@@ -6,6 +6,9 @@ from typing import List
 
 import cv2
 import numpy as np
+np.int = np.int32
+np.float = np.float64
+np.bool = np.bool_
 import pickle
 import base64
 import os
