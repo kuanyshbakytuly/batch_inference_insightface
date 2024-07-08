@@ -1,0 +1,6 @@
+numba==0.58.1
+opencv-python==4.8.0.76
+scikit-learn==1.2.2
+cuda-python==12.2.1
+onnx==1.15.0
+onnxruntime-gpu==1.16.3

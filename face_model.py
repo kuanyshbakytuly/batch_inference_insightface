@@ -6,11 +6,14 @@ from typing import List
 
 import cv2
 import numpy as np
+import pickle
 import base64
+import os
 
 from .dataimage import resize_image
 from .model_zoo.getter import get_model
 from .utils import fast_face_align as face_align
+from .utils.cosine import cosine_sim
 from .utils.helpers import to_chunks, validate_max_size
 from numpy.linalg import norm
 
@@ -87,6 +90,7 @@ class FaceAnalysis:
                  force_fp16: bool = False,
                  triton_uri=None,
                  root_dir: str = '/models',
+                 path2database: str = '',
                  **kwargs):
 
         if max_size is None:
@@ -98,6 +102,8 @@ class FaceAnalysis:
         self.max_det_batch_size = max_det_batch_size
         self.det_name = det_name
         self.rec_name = rec_name
+        self.database_path = path2database
+
         if backend_name not in ('trt', 'triton') and max_rec_batch_size != 1:
             logging.warning('Batch processing supported only for TensorRT & Triton backend. Fallback to 1.')
             self.max_rec_batch_size = 1
@@ -322,55 +328,92 @@ class FaceAnalysis:
             faces_by_img.append(faces[offset:offset + value])
             offset += value
 
-
         return faces_by_img
+    
+    def update_db(self, face_embeddings):
+        if os.path.exists(self.database_path):
+            with open(self.database_path, 'rb') as db_file:
+                face_database = pickle.load(db_file)
+            face_embeddings = face_database + face_embeddings
+        with open(self.database_path, 'wb') as f:
+            pickle.dump(face_embeddings, f)
 
-    def draw_faces(self,
-                   image,
-                   faces,
-                   draw_landmarks=True,
-                   draw_scores=True,
-                   draw_sizes=True):
+        return True
+    
+    def register_person(self, person_data, video_path):
+        face_embeddings = []
 
-        for face in faces:
-            bbox = face["bbox"].astype(int)
-            pt1 = tuple(bbox[0:2])
-            pt2 = tuple(bbox[2:4])
-            color = (0, 255, 0)
-            x, y = pt1
-            r, b = pt2
-            w = r - x
-            if face.get("mask") is False:
-                color = (0, 0, 255)
-            cv2.rectangle(image, pt1, pt2, color, 1)
+        cap = cv2.VideoCapture(video_path)
+        frame_count = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+        for frame_num in range(0, frame_count, 20):
+            cap.set(cv2.CAP_PROP_POS_FRAMES, frame_num)
+            ret, frame = cap.read()
+            if ret:
+                frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+                try:
+                    embedding = self.get([frame])[0]
+                except:
+                    continue
+                if len(embedding) == 0:
+                    continue
 
-            if draw_landmarks:
-                lms = face["landmarks"].astype(int)
-                pt_size = int(w * 0.05)
-                cv2.circle(image, (lms[0][0], lms[0][1]), 1, (0, 0, 255), pt_size)
-                cv2.circle(image, (lms[1][0], lms[1][1]), 1, (0, 255, 255), pt_size)
-                cv2.circle(image, (lms[2][0], lms[2][1]), 1, (255, 0, 255), pt_size)
-                cv2.circle(image, (lms[3][0], lms[3][1]), 1, (0, 255, 0), pt_size)
-                cv2.circle(image, (lms[4][0], lms[4][1]), 1, (255, 0, 0), pt_size)
+                data = {}
+                data['embedding'] = embedding[0]['vec']
+                data['identity'] = person_data['person_info']
+                face_embeddings.append(data)
+        cap.release()
+        status = self.update_db(face_embeddings=face_embeddings)
 
-            if draw_scores:
-                text = f"{face['prob']:.3f}"
-                pos = (x + 3, y - 5)
-                textcolor = (0, 0, 0)
-                thickness = 1
-                border = int(thickness / 2)
-                cv2.rectangle(image, (x - border, y - 21, w + thickness, 21), color, -1, 16)
-                cv2.putText(image, text, pos, 0, 0.5, color, 3, 16)
-                cv2.putText(image, text, pos, 0, 0.5, textcolor, 1, 16)
-            if draw_sizes:
-                text = f"w:{w}"
-                pos = (x + 3, b - 5)
-                cv2.putText(image, text, pos, 0, 0.5, (0, 0, 0), 3, 16)
-                cv2.putText(image, text, pos, 0, 0.5, (0, 255, 0), 1, 16)
+        return status
+    
+    def get_db_embeddings(self):
+        database_path = self.path2database
+        if os.path.exists(database_path):
+            with open(database_path, 'rb') as db_file:
+                face_database = pickle.load(db_file)
+        else:
+            face_database = {}
 
-        total = f'faces: {len(faces)} ({self.det_name})'
-        bottom = image.shape[0]
-        cv2.putText(image, total, (5, bottom - 5), 0, 1, (0, 0, 0), 3, 16)
-        cv2.putText(image, total, (5, bottom - 5), 0, 1, (0, 255, 0), 1, 16)
+        new_database = face_database
 
-        return image
+        embeddings_array = np.array([face['embedding'] for face in new_database])
+        identities_array = np.array([face['identity'] for face in new_database])
+
+        return embeddings_array, identities_array
+
+    def face_recognition(self, batch, conf):
+        embeddings_batch = self.get(batch)
+        db_embeddings, db_identities = self.get_db_embeddings()
+
+        annots = []
+        for x, embeddings in enumerate(embeddings_batch):
+            frame = batch[x]
+            if len(embeddings) == 0:
+                annots.append(([[], [], ["Unknown"]]))
+                continue
+
+            curr_embeddings = np.array([face['vec'] for face in embeddings])
+
+            if curr_embeddings.shape[0] == 0:
+                print('No Face Detected')
+                annots.append(frame)
+                continue
+            else:
+                results = cosine_sim(curr_embeddings, db_embeddings)
+                boxes, confs, prd_names = [], [], []
+                for i in range(1):
+                    bbox = embeddings[i]['bbox'].astype(int)
+                    boxes.append(bbox)
+                    ind, conf_cosine = results[i]
+                    confs.append(conf_cosine)
+
+                    if conf_cosine > conf:
+                        name = db_identities[int(ind)].split('/')[-2]
+                        text = name
+                    else:
+                        text = "Unknown"
+                    prd_names.append(text)
+
+            annots.append([boxes, confs, prd_names])
+
+        return annots
