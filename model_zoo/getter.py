@@ -194,7 +194,6 @@ def get_model(model_name: str, backend_name: str, im_size: List[int] = None, max
         'mxnet': 'mxnet',
         #'triton': triton_backend
     }
-    print(trt_backend)
 
     if backend_name not in backends:
         logging.error(f"Unknown backend '{backend_name}' specified. Exiting.")

@@ -81,12 +81,10 @@ class FaceAnalysis:
     def __init__(self,
                  det_name: str = 'retinaface_r50_v1',
                  rec_name: str = 'arcface_r100_v1',
-                 ga_name: str = 'genderage_v1',
-                 mask_detector: str = 'mask_detector',
                  max_size=None,
                  max_rec_batch_size: int = 1,
                  max_det_batch_size: int = 1,
-                 backend_name: str = 'mxnet',
+                 backend_name: str = 'trt',
                  force_fp16: bool = False,
                  triton_uri=None,
                  root_dir: str = '/models',
@@ -122,22 +120,6 @@ class FaceAnalysis:
         else:
             self.rec_model = None
 
-        if ga_name is not None:
-            self.ga_model = get_model(ga_name, backend_name=backend_name, force_fp16=force_fp16,
-                                      max_batch_size=self.max_rec_batch_size, root_dir=root_dir,
-                                      download_model=False, triton_uri=triton_uri)
-            self.ga_model.prepare()
-        else:
-            self.ga_model = None
-
-        if mask_detector is not None:
-            self.mask_model = get_model(mask_detector, backend_name=backend_name, force_fp16=force_fp16,
-                                        max_batch_size=self.max_rec_batch_size, root_dir=root_dir,
-                                        download_model=False, triton_uri=triton_uri)
-
-            self.mask_model.prepare()
-        else:
-            self.mask_model = None
 
     def sort_boxes(self, boxes, probs, landmarks, shape, max_num=0):
         # Based on original InsightFace python package implementation
@@ -183,22 +165,6 @@ class FaceAnalysis:
                 logging.debug(
                     f'Embedding {total} faces took: {took * 1000:.3f} ms. ({(took / total) * 1000:.3f} ms. per face)')
 
-            if extract_ga and self.ga_model:
-                t0 = time.perf_counter()
-                ga = self.ga_model.get(crops)
-                t1 = time.perf_counter()
-                took = t1 - t0
-                logging.debug(
-                    f'Extracting g/a for {total} faces took: {took * 1000:.3f} ms. ({(took / total) * 1000:.3f} ms. per face)')
-
-            if detect_masks and self.mask_model:
-                t0 = time.perf_counter()
-                masks = self.mask_model.get(crops)
-                t1 = time.perf_counter()
-                took = t1 - t0
-                logging.debug(
-                    f'Detecting masks for  {total} faces took: {took * 1000:.3f} ms. ({(took / total) * 1000:.3f} ms. per face)')
-
             for i, crop in enumerate(crops):
                 embedding_norm = None
                 normed_embedding = None
@@ -211,21 +177,6 @@ class FaceAnalysis:
                 if extract_embedding:
                     embedding_norm = norm(embedding)
                     normed_embedding = embedding / embedding_norm
-
-                if extract_ga and self.ga_model:
-                    _ga = ga[i]
-                    gender = int(_ga[0])
-                    age = _ga[1]
-
-                if detect_masks and self.mask_model:
-                    _masks = masks[i]
-                    mask = False
-                    mask_prob = float(_masks[0])
-                    no_mask_prob = float(_masks[1])
-                    if mask_prob > no_mask_prob and mask_prob >= mask_thresh:
-                        mask = True
-                    mask_probs = dict(mask=mask_prob,
-                                      no_mask=no_mask_prob)
 
                 face = chunk[i]
                 if return_face_data is False:
@@ -245,13 +196,10 @@ class FaceAnalysis:
     
     def get(self, images,
                   extract_embedding: bool = True,
-                  extract_ga: bool = True,
-                  detect_masks: bool = True,
                   return_face_data: bool = True,
                   max_size: List[int] = None,
                   threshold: float = 0.6,
                   min_face_size: int = 0,
-                  mask_thresh: float = 0.89,
                   limit_faces: int = 0,
                   use_rotation: bool = False,
                   **kwargs):
@@ -295,7 +243,7 @@ class FaceAnalysis:
 
                     landmarks = reproject_points(landmarks, scales[idx])
                     # Crop faces from original image instead of resized to improve quality
-                    if extract_ga or extract_embedding or return_face_data or detect_masks:
+                    if extract_embedding:
                         crops = face_align.norm_crop_batched(images[orig_id], landmarks)
                     else:
                         crops = [None] * len(boxes)
@@ -313,12 +261,10 @@ class FaceAnalysis:
                             faces.append(face)
 
         # Process detected faces
-        if extract_ga or extract_embedding or detect_masks:
+        if extract_embedding:
             faces = list(self.process_faces(faces,
                                             extract_embedding=extract_embedding,
-                                            extract_ga=extract_ga,
-                                            return_face_data=return_face_data,
-                                            detect_masks=detect_masks, mask_thresh=mask_thresh))
+                                            return_face_data=return_face_data,))
     
         faces_by_img = []
         offset = 0
@@ -340,9 +286,10 @@ class FaceAnalysis:
 
         return True
     
-    def register_person(self, person_data, video_path):
+    def register_person(self, data):
         face_embeddings = []
-
+        video_path = data['video']
+        person_info = data['person_info']
         cap = cv2.VideoCapture(video_path)
         frame_count = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
         for frame_num in range(0, frame_count, 20):
@@ -356,11 +303,11 @@ class FaceAnalysis:
                     continue
                 if len(embedding) == 0:
                     continue
-
-                data = {}
-                data['embedding'] = embedding[0]['vec']
-                data['identity'] = person_data['person_info']
-                face_embeddings.append(data)
+                emb = {}
+                emb['embedding'] = embedding[0]['vec']
+                emb['identity'] = person_info
+                face_embeddings.append(emb)
+                
         cap.release()
         status = self.update_db(face_embeddings=face_embeddings)
 
