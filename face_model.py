@@ -368,7 +368,7 @@ class FaceAnalysis:
                     confs.append(conf_cosine)
 
                     if conf_cosine > conf:
-                        name = db_identities[int(ind)]
+                        name = db_identities[int(ind)]['name']
                         text = name
                     else:
                         text = "Unknown"
