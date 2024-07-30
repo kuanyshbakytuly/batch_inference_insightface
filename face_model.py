@@ -348,7 +348,7 @@ class FaceAnalysis:
         annots = []
         for x, embeddings in enumerate(embeddings_batch):
             frame = batch[x]
-            
+
             if len(db_embeddings) == 0 or status_empty_db:  
                 annots.append(([[], [], ["Unknown"]]))
                 continue
@@ -364,12 +364,11 @@ class FaceAnalysis:
                 confs.append(conf_cosine)
 
                 if conf_cosine > conf:
-                    name = db_identities[int(ind)]['name']
-                    text = name
+                    person_info = db_identities[int(ind)]
                 else:
-                    text = "Unknown"
-                prd_names.append(text)
+                    person_info = "Unknown"
+                prd_names.append(person_info)
 
-            annots.append([boxes, confs, prd_names])
+            annots.append([boxes, confs, person_info])
 
         return annots
