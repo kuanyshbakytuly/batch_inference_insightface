@@ -355,7 +355,7 @@ class FaceAnalysis:
                 continue
 
             results = cosine_sim(curr_embeddings, db_embeddings)
-            boxes, confs, prd_names = [], [], []
+            boxes, confs, person_infos = [], [], []
             for i in range(len(curr_embeddings)):
                 bbox = embeddings[i]['bbox'].astype(int)
                 boxes.append(bbox)
@@ -366,8 +366,8 @@ class FaceAnalysis:
                     person_info = db_identities[int(ind)]
                 else:
                     person_info = "Unknown"
-                prd_names.append(person_info)
+                person_infos.append(person_info)
 
-            annots.append([boxes, confs, person_info])
+            annots.append([boxes, confs, person_infos])
 
         return annots
