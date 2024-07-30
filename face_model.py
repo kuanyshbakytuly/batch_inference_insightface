@@ -349,15 +349,17 @@ class FaceAnalysis:
         for x, embeddings in enumerate(embeddings_batch):
             frame = batch[x]
 
-            if len(db_embeddings) == 0 or status_empty_db:  
+            if len(embeddings) == 0 or status_empty_db:  
+                print(embeddings)
                 annots.append(([[], [], ["Unknown"]]))
                 continue
+            print(embeddings)
 
             curr_embeddings = np.array([face['vec'] for face in embeddings])
             results = cosine_sim(curr_embeddings, db_embeddings)
 
             boxes, confs, prd_names = [], [], []
-            for i in range(1):
+            for i in range(curr_embeddings):
                 bbox = embeddings[i]['bbox'].astype(int)
                 boxes.append(bbox)
                 ind, conf_cosine = results[i]
