@@ -334,45 +334,41 @@ class FaceAnalysis:
                 face_database = pickle.load(db_file)
         else:
             face_database = {}
-            return [], []
+            return [], [], True
 
         embeddings_array = np.array([face['embedding'] for face in face_database])
         identities_array = np.array([face['identity'] for face in face_database])
 
-        return embeddings_array, identities_array
+        return embeddings_array, identities_array, False
 
     def face_recognition(self, batch, conf):
         embeddings_batch = self.get(batch)
-        db_embeddings, db_identities = self.get_db_embeddings()
+        db_embeddings, db_identities, status_empty_db = self.get_db_embeddings()
 
         annots = []
         for x, embeddings in enumerate(embeddings_batch):
             frame = batch[x]
-            if len(embeddings) == 0:
+            
+            if len(db_embeddings) == 0 or status_empty_db:  
                 annots.append(([[], [], ["Unknown"]]))
                 continue
 
             curr_embeddings = np.array([face['vec'] for face in embeddings])
+            results = cosine_sim(curr_embeddings, db_embeddings)
 
-            if curr_embeddings.shape[0] == 0:
-                print('No Face Detected')
-                annots.append(frame)
-                continue
-            else:
-                results = cosine_sim(curr_embeddings, db_embeddings)
-                boxes, confs, prd_names = [], [], []
-                for i in range(1):
-                    bbox = embeddings[i]['bbox'].astype(int)
-                    boxes.append(bbox)
-                    ind, conf_cosine = results[i]
-                    confs.append(conf_cosine)
+            boxes, confs, prd_names = [], [], []
+            for i in range(1):
+                bbox = embeddings[i]['bbox'].astype(int)
+                boxes.append(bbox)
+                ind, conf_cosine = results[i]
+                confs.append(conf_cosine)
 
-                    if conf_cosine > conf:
-                        name = db_identities[int(ind)]['name']
-                        text = name
-                    else:
-                        text = "Unknown"
-                    prd_names.append(text)
+                if conf_cosine > conf:
+                    name = db_identities[int(ind)]['name']
+                    text = name
+                else:
+                    text = "Unknown"
+                prd_names.append(text)
 
             annots.append([boxes, confs, prd_names])
 
