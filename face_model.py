@@ -339,12 +339,12 @@ class FaceAnalysis:
         embeddings_array = np.array([face['embedding'] for face in face_database])
         identities_array = np.array([face['identity'] for face in face_database])
 
-        return embeddings_array, identities_array, False
+        return embeddings_array, identities_array, len(embeddings_array) == 0
 
     def face_recognition(self, batch, conf):
         embeddings_batch = self.get(batch)
         db_embeddings, db_identities, status_empty_db = self.get_db_embeddings()
-
+        
         annots = []
         for x, embeddings in enumerate(embeddings_batch):
             frame = batch[x]
