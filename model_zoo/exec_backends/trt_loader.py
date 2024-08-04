@@ -6,12 +6,14 @@ import cupyx
 
 
 # Simple helper data class that's a little nicer to use than a 2-tuple.
-class HostDeviceMem(object):
-    def __init__(self, size, dtype):
+class HostDeviceMem:
+    def __init__(self, size, dtype, device=None):
         self.size = size
         self.dtype = dtype
-        self.host = cupyx.zeros_pinned(size, dtype)
-        self.device = cp.zeros(size, dtype)
+        # Ensure we are using the 'device' context for memory allocation.
+        with cp.cuda.Device(device):
+            self.host = cupyx.zeros_pinned(size, dtype)
+            self.device = cp.zeros(size, dtype)
 
     def __str__(self):
         return "Host:\n" + str(self.host) + "\nDevice:\n" + str(self.device)
@@ -38,12 +40,13 @@ class HostDeviceMem(object):
         self.device.data.copy_to_host_async(self.hostptr, self.nbytes, stream)
 
 
-class TrtModel(object):
+class TrtModel:
     TRT_LOGGER = trt.Logger()
     trt.init_libnvinfer_plugins(None, "")
 
-    def __init__(self, engine_file):
+    def __init__(self, engine_file, device_id=0):
         self.engine_file = engine_file
+        self.device_id = device_id  # Store device ID
         self.batch_size = 1
         self.engine = None
         self.context = None
@@ -58,35 +61,36 @@ class TrtModel(object):
 
     def build(self):
         assert os.path.exists(self.engine_file), "Engine file doesn't exist"
+        
+        with cp.cuda.Device(self.device_id):  # Set the device context
+            runtime = trt.Runtime(TrtModel.TRT_LOGGER)
+            with open(self.engine_file, 'rb') as engine_file:
+                self.engine = runtime.deserialize_cuda_engine(engine_file.read())
 
-        runtime = trt.Runtime(TrtModel.TRT_LOGGER)
-        with open(self.engine_file, 'rb') as engine_file:
-            self.engine = runtime.deserialize_cuda_engine(engine_file.read())
+            if self.engine is None:
+                raise RuntimeError('Unable to load the engine file')
 
-        if self.engine is None:
-            raise RuntimeError('Unable to load the engine file')
-
-        self.context = self.engine.create_execution_context()
-        self.stream = cp.cuda.Stream(non_blocking=True)
-
-        self.max_batch_size = self.engine.get_profile_shape(0, 0)[2][0]
-        for binding in self.engine:
-            shape = self.engine.get_binding_shape(binding)
-            if shape[0] == -1:
-                shape = (self.max_batch_size,) + shape[1:]
-
-            size = trt.volume(shape)
-            dtype = trt.nptype(self.engine.get_binding_dtype(binding))
-            buffer = HostDeviceMem(size, dtype)
-
-            self.bindings.append(buffer.devptr)
-            if self.engine.binding_is_input(binding):
-                self.input = buffer
-                self.input_shapes.append(self.engine.get_binding_shape(binding))
-            else:
-                self.outputs.append(buffer)
-                self.out_shapes.append(self.engine.get_binding_shape(binding))
-                self.out_names.append(binding)
+            self.context = self.engine.create_execution_context()
+            self.stream = cp.cuda.Stream(non_blocking=True)
+            self.max_batch_size = self.engine.get_profile_shape(0, 0)[2][0]
+            
+            for binding in self.engine:
+                shape = self.engine.get_binding_shape(binding)
+                if shape[0] == -1:
+                    shape = (self.max_batch_size,) + shape[1:]
+                
+                size = trt.volume(shape)
+                dtype = trt.nptype(self.engine.get_binding_dtype(binding))
+                buffer = HostDeviceMem(size, dtype, device=self.device_id)
+                self.bindings.append(buffer.devptr)
+                
+                if self.engine.binding_is_input(binding):
+                    self.input = buffer
+                    self.input_shapes.append(shape)
+                else:
+                    self.outputs.append(buffer)
+                    self.out_shapes.append(shape)
+                    self.out_names.append(binding)
 
         assert self.input is not None
 

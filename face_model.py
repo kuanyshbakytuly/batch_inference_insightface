@@ -58,13 +58,13 @@ def serialize_face(_face_dict: dict, return_face_data: bool, return_landmarks: b
 class Detector:
     def __init__(self, det_name: str = 'retinaface_r50_v1', max_size=None,
                  backend_name: str = 'trt', force_fp16: bool = False, triton_uri=None, max_batch_size: int = 1,
-                 root_dir='/models'):
+                 root_dir='/models', device_id: str = '0'):
         if max_size is None:
             max_size = [640, 480]
 
         self.retina = get_model(det_name, backend_name=backend_name, force_fp16=force_fp16, im_size=max_size,
                                 root_dir=root_dir, download_model=False, triton_uri=triton_uri,
-                                max_batch_size=max_batch_size)
+                                max_batch_size=max_batch_size, device_id=device_id)
 
         self.retina.prepare(nms=0.35)
 
@@ -89,6 +89,7 @@ class FaceAnalysis:
                  det_name: str = 'scrfd_2.5g_gnkps',
                  rec_name: str = 'w600k_r50',
                  max_size=[640, 640],
+                 device_id: str = '0',
                  max_batch_size: int = 1,
                  max_rec_batch_size: int = 1,
                  max_det_batch_size: int = 1,
@@ -117,12 +118,12 @@ class FaceAnalysis:
         assert det_name is not None
 
         self.det_model = Detector(det_name=det_name, max_size=self.max_size,
-                                  max_batch_size=self.max_det_batch_size, backend_name=backend_name,
+                                  max_batch_size=self.max_det_batch_size, device_id=device_id, backend_name=backend_name,
                                   force_fp16=force_fp16, triton_uri=triton_uri, root_dir=root_dir)
 
         if rec_name is not None:
             self.rec_model = get_model(rec_name, backend_name=backend_name, force_fp16=force_fp16,
-                                       max_batch_size=self.max_rec_batch_size, root_dir=root_dir,
+                                       max_batch_size=self.max_rec_batch_size, device_id=device_id, root_dir=root_dir,
                                        download_model=False, triton_uri=triton_uri)
             self.rec_model.prepare()
         else:

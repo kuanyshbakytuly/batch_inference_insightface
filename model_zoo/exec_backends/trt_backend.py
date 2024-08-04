@@ -35,8 +35,9 @@ class Arcface:
                  input_mean: float = 0.,
                  input_std: float = 1.,
                  swapRB=False,
+                 device_id: str = '0',
                  **kwargs):
-        self.rec_model = TrtModel(rec_name)
+        self.rec_model = TrtModel(rec_name, device_id)
         self.input_mean = input_mean
         self.input_std = input_std
         self.input_shape = None
@@ -77,8 +78,8 @@ class Arcface:
 class DetectorInfer:
 
     def __init__(self, model='/models/trt-engines/centerface/centerface.plan',
-                 output_order=None, **kwargs):
-        self.rec_model = TrtModel(model)
+                 output_order=None, device_id: str = '0', **kwargs):
+        self.rec_model = TrtModel(model, device_id)
         self.model_name = os.path.basename(model)
         self.stream = None
         self.input_ptr = None
