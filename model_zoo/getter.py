@@ -132,7 +132,7 @@ def prepare_backend(model_name, backend_name, im_size: List[int] = None,
 
 def get_model(model_name: str, backend_name: str, im_size: List[int] = None, max_batch_size: int = 1,
               force_fp16: bool = False,
-              root_dir: str = "/models", download_model: bool = True, triton_uri=None, **kwargs):
+              root_dir: str = "/models", download_model: bool = True, triton_uri=None, device_id: str = '0', **kwargs):
     """
     Returns inference backend instance with loaded model.
 
@@ -168,5 +168,5 @@ def get_model(model_name: str, backend_name: str, im_size: List[int] = None, max
         outputs = read_outputs_order(trt_dir)
 
     func = func_map[config.models[model_name].get('function')]
-    model = func(model_path=model_path, backend=backend, outputs=outputs, triton_uri=triton_uri)
+    model = func(model_path=model_path, backend=backend, device_id=device_id, outputs=outputs, triton_uri=triton_uri)
     return model

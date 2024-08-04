@@ -46,13 +46,13 @@ def serialize_face(_face_dict: dict, return_face_data: bool, return_landmarks: b
 class Detector:
     def __init__(self, det_name: str = 'retinaface_r50_v1', max_size=None,
                  backend_name: str = 'trt', force_fp16: bool = False, triton_uri=None, max_batch_size: int = 1,
-                 root_dir='/models'):
+                 root_dir='/models', device_id: str = '0'):
         if max_size is None:
             max_size = [640, 480]
 
         self.retina = get_model(det_name, backend_name=backend_name, force_fp16=force_fp16, im_size=max_size,
                                 root_dir=root_dir, download_model=False, triton_uri=triton_uri,
-                                max_batch_size=max_batch_size)
+                                max_batch_size=max_batch_size, device_id=device_id)
 
         self.retina.prepare(nms=0.35)
         print("Detector Model is building")
@@ -78,6 +78,7 @@ class FaceAnalysis:
                  det_name: str = 'retinaface_r50_v1',
                  rec_name: str = 'arcface_r100_v1',
                  ga_name: str = 'genderage_v1',
+                 device_id: str = '0',
                  mask_detector: str = 'mask_detector',
                  max_size=None,
                  max_rec_batch_size: int = 1,
@@ -104,12 +105,12 @@ class FaceAnalysis:
 
         self.det_model = Detector(det_name=det_name, max_size=self.max_size,
                                   max_batch_size=self.max_det_batch_size, backend_name=backend_name,
-                                  force_fp16=force_fp16, triton_uri=triton_uri, root_dir=root_dir)
+                                  force_fp16=force_fp16, triton_uri=triton_uri, root_dir=root_dir, device_id=device_id)
 
         if rec_name is not None:
             self.rec_model = get_model(rec_name, backend_name=backend_name, force_fp16=force_fp16,
                                        max_batch_size=self.max_rec_batch_size, root_dir=root_dir,
-                                       download_model=False, triton_uri=triton_uri)
+                                       download_model=False, triton_uri=triton_uri, device_id=device_id)
             self.rec_model.prepare()
             print("Recognition Model is building")
         else:
