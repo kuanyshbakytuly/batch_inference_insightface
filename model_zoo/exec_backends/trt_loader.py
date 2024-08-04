@@ -161,11 +161,18 @@ def do_inference(context, engine, bindings, inputs, outputs, stream):
         context.set_tensor_address(engine.get_tensor_name(i), bindings[i])
     return _do_inference_base(inputs, outputs, stream, execute_async_func)
 
+def set_cuda_device(device_id):
+    """
+    Explicitly sets the device to be used in subsequent CUDA operations.
+    """
+    result = cudart.cudaSetDevice(device_id)
+    if result != cudart.cudaError_t.cudaSuccess:
+        raise RuntimeError("Failed to set CUDA device to {}".format(device_id))
 
 class TrtModel(object):
     trt.init_libnvinfer_plugins(None, "")
 
-    def __init__(self, engine_file):
+    def __init__(self, engine_file, device_id):
         self.engine_file = engine_file
         self.batch_size = 1
         self.engine = None
@@ -177,10 +184,12 @@ class TrtModel(object):
         self.out_names = None
         self.inputs = None
         self.inputs_shape = None
+        self.device_id = 0
 
 
 
     def build(self):
+        set_cuda_device(self.device_id)
         assert os.path.exists(self.engine_file), "Engine file doesn't exist"
         TRT_LOGGER = trt.Logger(trt.Logger.WARNING)
         # Deserializing a Plan
